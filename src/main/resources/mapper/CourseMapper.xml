@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.classroom.mapper.CourseMapper">
+
+    <sql id="courseColumns">
+        c.CUID, c.CID, c.CourseName, c.CourseImage, c.Teacher, c.LearnTime, c.Clicked,
+        c.Orders, c.Recommend, c.Status, c.CreateTime, c.CourseExplain,
+        (SELECT COUNT(*) FROM chapters ch WHERE ch.CUID = c.CUID AND ch.Status = 1) AS chapterCount
+    </sql>
+
+    <select id="selectByCuid" resultType="com.classroom.entity.Course">
+        SELECT <include refid="courseColumns"/>
+        FROM courses c
+        WHERE c.CUID = #{cuid}
+    </select>
+
+    <select id="selectList" resultType="com.classroom.entity.Course">
+        SELECT <include refid="courseColumns"/>
+        FROM courses c
+        <where>
+            c.Status = 1
+            <if test="cid != null">AND c.CID = #{cid}</if>
+            <if test="keyword != null and keyword != ''">
+                AND c.CourseName LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+            <if test="recommend != null">AND c.Recommend = #{recommend}</if>
+        </where>
+        <choose>
+            <when test="orderBy == 'hot'">ORDER BY c.Clicked DESC, c.CreateTime DESC</when>
+            <when test="orderBy == 'recommend'">ORDER BY c.Recommend DESC, c.CreateTime DESC</when>
+            <otherwise>ORDER BY c.CreateTime DESC, c.CUID DESC</otherwise>
+        </choose>
+        <if test="offset != null and limit != null">
+            LIMIT #{offset}, #{limit}
+        </if>
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*)
+        FROM courses
+        <where>
+            Status = 1
+            <if test="cid != null">AND CID = #{cid}</if>
+            <if test="keyword != null and keyword != ''">
+                AND CourseName LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+            <if test="recommend != null">AND Recommend = #{recommend}</if>
+        </where>
+    </select>
+
+    <insert id="insert" parameterType="com.classroom.entity.Course"
+            useGeneratedKeys="true" keyProperty="cuid">
+        INSERT INTO courses (CID, CourseName, CourseImage, Teacher, LearnTime, Clicked,
+                             Orders, Recommend, Status, CourseExplain)
+        VALUES (#{cid}, #{courseName}, #{courseImage}, #{teacher}, #{learnTime}, #{clicked},
+                #{orders}, #{recommend}, #{status}, #{courseExplain})
+    </insert>
+
+    <update id="update" parameterType="com.classroom.entity.Course">
+        UPDATE courses
+        <set>
+            <if test="cid != null">CID = #{cid},</if>
+            <if test="courseName != null">CourseName = #{courseName},</if>
+            <if test="courseImage != null">CourseImage = #{courseImage},</if>
+            <if test="teacher != null">Teacher = #{teacher},</if>
+            <if test="learnTime != null">LearnTime = #{learnTime},</if>
+            <if test="clicked != null">Clicked = #{clicked},</if>
+            <if test="orders != null">Orders = #{orders},</if>
+            <if test="recommend != null">Recommend = #{recommend},</if>
+            <if test="status != null">Status = #{status},</if>
+            <if test="courseExplain != null">CourseExplain = #{courseExplain},</if>
+        </set>
+        WHERE CUID = #{cuid}
+    </update>
+
+    <update id="deleteByCuid">
+        UPDATE courses SET Status = 0 WHERE CUID = #{cuid}
+    </update>
+
+    <select id="selectDeleted" resultType="com.classroom.entity.Course">
+        SELECT <include refid="courseColumns"/>
+        FROM courses c
+        WHERE c.Status = 0
+        ORDER BY c.CreateTime DESC, c.CUID DESC
+    </select>
+
+    <update id="restore">
+        UPDATE courses SET Status = 1 WHERE CUID = #{cuid}
+    </update>
+
+    <delete id="deleteByCuidPhysical">
+        DELETE FROM courses WHERE CUID = #{cuid}
+    </delete>
+
+    <select id="selectCidsByCategory" resultType="java.lang.Integer">
+        SELECT CUID FROM courses WHERE CID = #{cid}
+    </select>
+</mapper>

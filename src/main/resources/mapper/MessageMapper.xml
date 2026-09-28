@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.classroom.mapper.MessageMapper">
+
+    <sql id="messageColumns">
+        m.MID, m.SenderUID, m.ReceiverUID, m.Title, m.Content, m.IsRead, m.CreateTime,
+        u.UserName AS senderName
+    </sql>
+
+    <select id="selectByMid" resultType="com.classroom.entity.Message">
+        SELECT <include refid="messageColumns"/>
+        FROM messages m
+        LEFT JOIN users u ON m.SenderUID = u.UID
+        WHERE m.MID = #{mid}
+    </select>
+
+    <select id="selectByReceiver" resultType="com.classroom.entity.Message">
+        SELECT <include refid="messageColumns"/>
+        FROM messages m
+        LEFT JOIN users u ON m.SenderUID = u.UID
+        WHERE m.ReceiverUID = #{uid} OR m.ReceiverUID = 0
+        ORDER BY m.CreateTime DESC, m.MID DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="countByReceiver" resultType="long">
+        SELECT COUNT(*)
+        FROM messages m
+        WHERE m.ReceiverUID = #{uid} OR m.ReceiverUID = 0
+    </select>
+
+    <select id="countUnread" resultType="long">
+        SELECT COUNT(*)
+        FROM messages m
+        WHERE m.ReceiverUID = #{uid} AND m.IsRead = 0
+    </select>
+
+    <update id="markRead">
+        UPDATE messages SET IsRead = 1 WHERE MID = #{mid}
+    </update>
+
+    <select id="selectPage" resultType="com.classroom.entity.Message">
+        SELECT <include refid="messageColumns"/>
+        FROM messages m
+        LEFT JOIN users u ON m.SenderUID = u.UID
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (m.Title LIKE CONCAT('%', #{keyword}, '%') OR m.Content LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+        ORDER BY m.CreateTime DESC, m.MID DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="countAll" resultType="long">
+        SELECT COUNT(*)
+        FROM messages m
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (m.Title LIKE CONCAT('%', #{keyword}, '%') OR m.Content LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+    </select>
+
+    <insert id="insert" parameterType="com.classroom.entity.Message"
+            useGeneratedKeys="true" keyProperty="mid">
+        INSERT INTO messages (SenderUID, ReceiverUID, Title, Content)
+        VALUES (#{senderUid}, #{receiverUid}, #{title}, #{content})
+    </insert>
+
+    <update id="update" parameterType="com.classroom.entity.Message">
+        UPDATE messages
+        <set>
+            <if test="title != null">Title = #{title},</if>
+            <if test="content != null">Content = #{content},</if>
+            <if test="isRead != null">IsRead = #{isRead},</if>
+        </set>
+        WHERE MID = #{mid}
+    </update>
+
+    <delete id="deleteByMid">
+        DELETE FROM messages WHERE MID = #{mid}
+    </delete>
+</mapper>

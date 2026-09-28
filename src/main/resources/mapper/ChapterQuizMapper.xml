@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.classroom.mapper.ChapterQuizMapper">
+
+    <select id="selectByChid" resultType="com.classroom.entity.ChapterQuiz">
+        SELECT QID, CHID, Question, OptionA, OptionB, OptionC, OptionD, Answer, Orders, CreateTime
+        FROM chapter_quizzes
+        WHERE CHID = #{chid}
+        ORDER BY Orders, QID
+    </select>
+
+    <insert id="insert" parameterType="com.classroom.entity.ChapterQuiz"
+            useGeneratedKeys="true" keyProperty="qid">
+        INSERT INTO chapter_quizzes (CHID, Question, OptionA, OptionB, OptionC, OptionD, Answer, Orders)
+        VALUES (#{chid}, #{question}, #{optionA}, #{optionB}, #{optionC}, #{optionD}, #{answer}, #{orders})
+    </insert>
+
+    <update id="update" parameterType="com.classroom.entity.ChapterQuiz">
+        UPDATE chapter_quizzes
+        <set>
+            <if test="question != null">Question = #{question},</if>
+            <if test="optionA != null">OptionA = #{optionA},</if>
+            <if test="optionB != null">OptionB = #{optionB},</if>
+            <if test="optionC != null">OptionC = #{optionC},</if>
+            <if test="optionD != null">OptionD = #{optionD},</if>
+            <if test="answer != null">Answer = #{answer},</if>
+            <if test="orders != null">Orders = #{orders},</if>
+        </set>
+        WHERE QID = #{qid}
+    </update>
+
+    <delete id="deleteByQid">
+        DELETE FROM chapter_quizzes WHERE QID = #{qid}
+    </delete>
+</mapper>

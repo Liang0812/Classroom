@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.classroom.mapper.UserRoleMapper">
+
+    <insert id="insert" parameterType="com.classroom.entity.UserRole">
+        INSERT INTO userroles (UID, RID)
+        VALUES (#{uid}, #{rid})
+    </insert>
+
+    <delete id="deleteByUid">
+        DELETE FROM userroles WHERE UID = #{uid}
+    </delete>
+
+    <select id="selectRidByUid" resultType="java.lang.Integer">
+        SELECT RID FROM userroles WHERE UID = #{uid}
+    </select>
+
+    <select id="selectRolesByUid" resultType="com.classroom.entity.Role">
+        SELECT r.RID, r.RoleName
+        FROM userroles ur
+        INNER JOIN roles r ON ur.RID = r.RID
+        WHERE ur.UID = #{uid}
+    </select>
+</mapper>

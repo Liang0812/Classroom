@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.classroom.mapper.ChapterFileMapper">
+
+    <select id="selectByChid" resultType="com.classroom.entity.ChapterFile">
+        SELECT FileID, CHID, FileName, FileUrl, FileSize, Orders, CreateTime
+        FROM chapter_files
+        WHERE CHID = #{chid}
+        ORDER BY Orders, FileID
+    </select>
+
+    <insert id="insert" parameterType="com.classroom.entity.ChapterFile"
+            useGeneratedKeys="true" keyProperty="fileId">
+        INSERT INTO chapter_files (CHID, FileName, FileUrl, FileSize, Orders)
+        VALUES (#{chid}, #{fileName}, #{fileUrl}, #{fileSize}, #{orders})
+    </insert>
+
+    <delete id="deleteByFileId">
+        DELETE FROM chapter_files WHERE FileID = #{fileId}
+    </delete>
+</mapper>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.classroom.mapper.RoleNodeMapper">
+
+    <insert id="insert" parameterType="com.classroom.entity.RoleNode">
+        INSERT INTO rolenodes (RID, NID)
+        VALUES (#{rid}, #{nid})
+    </insert>
+
+    <delete id="deleteByRid">
+        DELETE FROM rolenodes WHERE RID = #{rid}
+    </delete>
+
+    <select id="selectNidByRid" resultType="java.lang.Integer">
+        SELECT NID FROM rolenodes WHERE RID = #{rid}
+    </select>
+</mapper>

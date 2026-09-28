@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.classroom.mapper.RoleMapper">
+
+    <select id="selectByRid" resultType="com.classroom.entity.Role">
+        SELECT RID, RoleName FROM roles WHERE RID = #{rid}
+    </select>
+
+    <select id="selectAll" resultType="com.classroom.entity.Role">
+        SELECT RID, RoleName FROM roles ORDER BY RID
+    </select>
+
+    <insert id="insert" parameterType="com.classroom.entity.Role"
+            useGeneratedKeys="true" keyProperty="rid">
+        INSERT INTO roles (RoleName) VALUES (#{roleName})
+    </insert>
+
+    <update id="update" parameterType="com.classroom.entity.Role">
+        UPDATE roles SET RoleName = #{roleName} WHERE RID = #{rid}
+    </update>
+
+    <delete id="deleteByRid">
+        DELETE FROM roles WHERE RID = #{rid}
+    </delete>
+</mapper>

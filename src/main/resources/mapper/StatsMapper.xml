@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.classroom.mapper.StatsMapper">
+
+    <select id="selectSummary" resultType="map">
+        SELECT
+            (SELECT COUNT(*) FROM users WHERE Status = 1) AS users,
+            (SELECT COUNT(*) FROM courses WHERE Status = 1) AS courses,
+            (SELECT COUNT(*) FROM categories WHERE Status = 1) AS categories,
+            (SELECT COUNT(*) FROM userlearns WHERE Status = 1) AS learns,
+            (SELECT COUNT(*) FROM questions WHERE Status = 1) AS questions,
+            (SELECT COUNT(*) FROM messages) AS messages
+    </select>
+
+    <select id="selectHotCourses" resultType="com.classroom.entity.Course">
+        SELECT CUID, CID, CourseName, CourseImage, Teacher, LearnTime, Clicked,
+               Orders, Recommend, Status, CreateTime, CourseExplain
+        FROM courses
+        WHERE Status = 1
+        ORDER BY Clicked DESC, CUID DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="selectLearnTrend" resultType="map">
+        SELECT DATE(StartTime) AS day, COUNT(*) AS count
+        FROM userlearns
+        WHERE Status = 1 AND StartTime >= DATE_SUB(CURDATE(), INTERVAL #{days} DAY)
+        GROUP BY DATE(StartTime)
+        ORDER BY day ASC
+    </select>
+
+    <select id="selectCategoryCourses" resultType="map">
+        SELECT c.CID AS cid, c.CategoryName AS categoryName, COUNT(co.CUID) AS courseCount
+        FROM categories c
+        LEFT JOIN courses co ON c.CID = co.CID AND co.Status = 1
+        WHERE c.Status = 1
+        GROUP BY c.CID, c.CategoryName
+        ORDER BY c.Orders, c.CID
+    </select>
+</mapper>

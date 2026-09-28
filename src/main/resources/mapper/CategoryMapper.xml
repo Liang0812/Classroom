@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.classroom.mapper.CategoryMapper">
+
+    <select id="selectByCid" resultType="com.classroom.entity.Category">
+        SELECT CID, CategoryName, ParentID, Orders, Status, CreateTime
+        FROM categories
+        WHERE CID = #{cid}
+    </select>
+
+    <select id="selectList" resultType="com.classroom.entity.Category">
+        SELECT CID, CategoryName, ParentID, Orders, Status, CreateTime
+        FROM categories
+        WHERE Status = 1
+        ORDER BY Orders, CID
+    </select>
+
+    <select id="selectPage" resultType="com.classroom.entity.Category">
+        SELECT CID, CategoryName, ParentID, Orders, Status, CreateTime
+        FROM categories
+        <where>
+            Status = 1
+            <if test="keyword != null and keyword != ''">
+                AND CategoryName LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+        </where>
+        ORDER BY Orders, CID
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*)
+        FROM categories
+        <where>
+            Status = 1
+            <if test="keyword != null and keyword != ''">
+                AND CategoryName LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+        </where>
+    </select>
+
+    <insert id="insert" parameterType="com.classroom.entity.Category"
+            useGeneratedKeys="true" keyProperty="cid">
+        INSERT INTO categories (CategoryName, ParentID, Orders, Status)
+        VALUES (#{categoryName}, #{parentId}, #{orders}, #{status})
+    </insert>
+
+    <update id="update" parameterType="com.classroom.entity.Category">
+        UPDATE categories
+        <set>
+            <if test="categoryName != null">CategoryName = #{categoryName},</if>
+            <if test="parentId != null">ParentID = #{parentId},</if>
+            <if test="orders != null">Orders = #{orders},</if>
+            <if test="status != null">Status = #{status},</if>
+        </set>
+        WHERE CID = #{cid}
+    </update>
+
+    <update id="deleteByCid">
+        UPDATE categories SET Status = 0 WHERE CID = #{cid}
+    </update>
+
+    <select id="selectDeleted" resultType="com.classroom.entity.Category">
+        SELECT CID, CategoryName, ParentID, Orders, Status, CreateTime
+        FROM categories
+        WHERE Status = 0
+        ORDER BY CreateTime DESC, CID DESC
+    </select>
+
+    <update id="restore">
+        UPDATE categories SET Status = 1 WHERE CID = #{cid}
+    </update>
+
+    <delete id="deleteByCidPhysical">
+        DELETE FROM categories WHERE CID = #{cid}
+    </delete>
+</mapper>

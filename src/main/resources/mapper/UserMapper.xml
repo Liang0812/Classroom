@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.classroom.mapper.UserMapper">
+
+    <select id="selectByUid" resultType="com.classroom.entity.User">
+        SELECT UID, UserName, LoginPwd, Gender, Email, Phone, Status, CreateTime, Remark, Avatar
+        FROM users
+        WHERE UID = #{uid}
+    </select>
+
+    <select id="selectByUserName" resultType="com.classroom.entity.User">
+        SELECT UID, UserName, LoginPwd, Gender, Email, Phone, Status, CreateTime, Remark, Avatar
+        FROM users
+        WHERE UserName = #{userName}
+        LIMIT 1
+    </select>
+
+    <select id="selectByEmail" resultType="com.classroom.entity.User">
+        SELECT UID, UserName, LoginPwd, Gender, Email, Phone, Status, CreateTime, Remark, Avatar
+        FROM users
+        WHERE Email = #{email}
+        LIMIT 1
+    </select>
+
+    <select id="selectByPhone" resultType="com.classroom.entity.User">
+        SELECT UID, UserName, LoginPwd, Gender, Email, Phone, Status, CreateTime, Remark, Avatar
+        FROM users
+        WHERE Phone = #{phone}
+        LIMIT 1
+    </select>
+
+    <!-- 登录：账号为邮箱或手机号，且账号正常 -->
+    <select id="selectByAccount" resultType="com.classroom.entity.User">
+        SELECT UID, UserName, LoginPwd, Gender, Email, Phone, Status, CreateTime, Remark, Avatar
+        FROM users
+        WHERE (Email = #{account} OR Phone = #{account})
+          AND Status = 1
+        LIMIT 1
+    </select>
+
+    <select id="selectList" resultType="com.classroom.entity.User">
+        SELECT UID, UserName, LoginPwd, Gender, Email, Phone, Status, CreateTime, Remark, Avatar
+        FROM users
+        ORDER BY UID DESC
+    </select>
+
+    <!-- 按角色查询用户（联查 userroles） -->
+    <select id="selectByRole" resultType="com.classroom.entity.User">
+        SELECT u.UID, u.UserName, u.Gender, u.Email, u.Phone, u.Status, u.CreateTime, u.Remark, u.Avatar
+        FROM users u
+        INNER JOIN userroles ur ON u.UID = ur.UID
+        WHERE ur.RID = #{roleId} AND u.Status = 1
+        ORDER BY u.UID DESC
+    </select>
+
+    <!-- 后台用户分页（角色/关键字筛选，联查角色名） -->
+    <select id="selectPage" resultType="com.classroom.entity.User">
+        SELECT u.UID, u.UserName, u.Gender, u.Email, u.Phone, u.Status, u.CreateTime, u.Remark, u.Avatar,
+               GROUP_CONCAT(r.RoleName ORDER BY r.RID SEPARATOR ',') AS roleNames
+        FROM users u
+        LEFT JOIN userroles ur ON u.UID = ur.UID
+        LEFT JOIN roles r ON ur.RID = r.RID
+        <where>
+            <if test="role != null">AND ur.RID = #{role}</if>
+            <if test="keyword != null and keyword != ''">
+                AND (u.UserName LIKE CONCAT('%', #{keyword}, '%')
+                     OR u.Email LIKE CONCAT('%', #{keyword}, '%')
+                     OR u.Phone LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+        GROUP BY u.UID, u.UserName, u.Gender, u.Email, u.Phone, u.Status, u.CreateTime, u.Remark, u.Avatar
+        ORDER BY u.UID DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="countAdmin" resultType="long">
+        SELECT COUNT(DISTINCT u.UID)
+        FROM users u
+        LEFT JOIN userroles ur ON u.UID = ur.UID
+        LEFT JOIN roles r ON ur.RID = r.RID
+        <where>
+            <if test="role != null">AND ur.RID = #{role}</if>
+            <if test="keyword != null and keyword != ''">
+                AND (u.UserName LIKE CONCAT('%', #{keyword}, '%')
+                     OR u.Email LIKE CONCAT('%', #{keyword}, '%')
+                     OR u.Phone LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+    </select>
+
+    <insert id="insert" parameterType="com.classroom.entity.User"
+            useGeneratedKeys="true" keyProperty="uid">
+        INSERT INTO users (UserName, LoginPwd, Gender, Email, Phone, Status, Remark, Avatar)
+        VALUES (#{userName}, #{loginPwd}, #{gender}, #{email}, #{phone}, #{status}, #{remark}, #{avatar})
+    </insert>
+
+    <update id="update" parameterType="com.classroom.entity.User">
+        UPDATE users
+        <set>
+            <if test="userName != null">UserName = #{userName},</if>
+            <if test="loginPwd != null">LoginPwd = #{loginPwd},</if>
+            <if test="gender != null">Gender = #{gender},</if>
+            <if test="email != null">Email = #{email},</if>
+            <if test="phone != null">Phone = #{phone},</if>
+            <if test="status != null">Status = #{status},</if>
+            <if test="remark != null">Remark = #{remark},</if>
+            <if test="avatar != null">Avatar = #{avatar},</if>
+        </set>
+        WHERE UID = #{uid}
+    </update>
+
+    <delete id="deleteByUid">
+        DELETE FROM users WHERE UID = #{uid}
+    </delete>
+</mapper>

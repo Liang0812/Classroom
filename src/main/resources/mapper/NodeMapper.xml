@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.classroom.mapper.NodeMapper">
+
+    <sql id="nodeColumns">
+        NID, NodeName, Url, ParentNode, Orders, NodeExplain
+    </sql>
+
+    <select id="selectByNid" resultType="com.classroom.entity.Node">
+        SELECT <include refid="nodeColumns"/>
+        FROM nodes
+        WHERE NID = #{nid}
+    </select>
+
+    <select id="selectAll" resultType="com.classroom.entity.Node">
+        SELECT <include refid="nodeColumns"/>
+        FROM nodes
+        ORDER BY Orders ASC, NID ASC
+    </select>
+
+    <select id="selectByRoleId" resultType="com.classroom.entity.Node">
+        SELECT n.NID, n.NodeName, n.Url, n.ParentNode, n.Orders, n.NodeExplain
+        FROM nodes n
+        INNER JOIN rolenodes rn ON n.NID = rn.NID
+        WHERE rn.RID = #{rid}
+        ORDER BY n.Orders ASC, n.NID ASC
+    </select>
+
+    <insert id="insert" parameterType="com.classroom.entity.Node"
+            useGeneratedKeys="true" keyProperty="nid">
+        INSERT INTO nodes (NodeName, Url, ParentNode, Orders, NodeExplain)
+        VALUES (#{nodeName}, #{url}, #{parentNode}, #{orders}, #{nodeExplain})
+    </insert>
+
+    <update id="update" parameterType="com.classroom.entity.Node">
+        UPDATE nodes
+        <set>
+            <if test="nodeName != null">NodeName = #{nodeName},</if>
+            <if test="url != null">Url = #{url},</if>
+            <if test="parentNode != null">ParentNode = #{parentNode},</if>
+            <if test="orders != null">Orders = #{orders},</if>
+            <if test="nodeExplain != null">NodeExplain = #{nodeExplain},</if>
+        </set>
+        WHERE NID = #{nid}
+    </update>
+
+    <delete id="deleteByNid">
+        DELETE FROM nodes WHERE NID = #{nid}
+    </delete>
+</mapper>

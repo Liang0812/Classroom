@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.classroom.mapper.CourseRatingMapper">
+
+    <select id="selectByCuidAndUid" resultType="com.classroom.entity.Rating">
+        SELECT RID, CUID, UID, Rating, Comment, Status, CreateTime
+        FROM course_ratings
+        WHERE CUID = #{cuid} AND UID = #{uid}
+        LIMIT 1
+    </select>
+
+    <insert id="insertOrUpdate" parameterType="com.classroom.entity.Rating">
+        INSERT INTO course_ratings (CUID, UID, Rating, Comment, Status, CreateTime)
+        VALUES (#{cuid}, #{uid}, #{rating}, #{comment}, #{status}, NOW())
+        ON DUPLICATE KEY UPDATE
+            Rating = VALUES(Rating),
+            Comment = VALUES(Comment),
+            Status = VALUES(Status),
+            CreateTime = NOW()
+    </insert>
+
+    <select id="selectByCourse" resultType="com.classroom.entity.Rating">
+        SELECT r.RID, r.CUID, r.UID, r.Rating, r.Comment, r.Status, r.CreateTime,
+               u.UserName AS userName
+        FROM course_ratings r
+        INNER JOIN users u ON r.UID = u.UID
+        WHERE r.CUID = #{cuid} AND r.Status = 1
+        ORDER BY r.CreateTime DESC, r.RID DESC
+        LIMIT 100
+    </select>
+
+    <select id="selectStatsByCuid" resultType="map">
+        SELECT COUNT(*) AS ratingCount,
+               ROUND(AVG(Rating), 1) AS avgRating
+        FROM course_ratings
+        WHERE CUID = #{cuid} AND Status = 1
+    </select>
+</mapper>

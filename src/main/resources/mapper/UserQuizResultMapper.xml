@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.classroom.mapper.UserQuizResultMapper">
+
+    <select id="selectByUidQids" resultType="com.classroom.entity.UserQuizResult">
+        SELECT ResultID, UID, QID, UserAnswer, IsCorrect, CreateTime
+        FROM user_quiz_results
+        WHERE UID = #{uid} AND QID IN
+        <foreach collection="qids" item="qid" open="(" separator="," close=")">
+            #{qid}
+        </foreach>
+    </select>
+
+    <insert id="upsert">
+        INSERT INTO user_quiz_results (UID, QID, UserAnswer, IsCorrect)
+        VALUES (#{uid}, #{qid}, #{userAnswer}, #{isCorrect})
+        ON DUPLICATE KEY UPDATE
+            UserAnswer = VALUES(UserAnswer),
+            IsCorrect = VALUES(IsCorrect),
+            CreateTime = CURRENT_TIMESTAMP
+    </insert>
+</mapper>

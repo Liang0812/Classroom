@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.classroom.mapper.QuestionMapper">
+
+    <sql id="questionJoinColumns">
+        q.QID, q.UID, q.CHID, q.Question, q.Answer, q.CreateTime, q.Status, q.Remark,
+        u.UserName AS userName,
+        ch.ChapterName AS chapterName,
+        c.CourseName AS courseName
+    </sql>
+
+    <select id="selectByQid" resultType="com.classroom.entity.Question">
+        SELECT <include refid="questionJoinColumns"/>
+        FROM questions q
+        INNER JOIN users u ON q.UID = u.UID
+        INNER JOIN chapters ch ON q.CHID = ch.CHID
+        INNER JOIN courses c ON ch.CUID = c.CUID
+        WHERE q.QID = #{qid}
+    </select>
+
+    <select id="selectByChid" resultType="com.classroom.entity.Question">
+        SELECT <include refid="questionJoinColumns"/>
+        FROM questions q
+        INNER JOIN users u ON q.UID = u.UID
+        INNER JOIN chapters ch ON q.CHID = ch.CHID
+        INNER JOIN courses c ON ch.CUID = c.CUID
+        WHERE q.CHID = #{chid} AND q.Status IN (1, 2)
+        ORDER BY q.CreateTime DESC, q.QID DESC
+    </select>
+
+    <select id="selectByUid" resultType="com.classroom.entity.Question">
+        SELECT <include refid="questionJoinColumns"/>
+        FROM questions q
+        INNER JOIN users u ON q.UID = u.UID
+        INNER JOIN chapters ch ON q.CHID = ch.CHID
+        INNER JOIN courses c ON ch.CUID = c.CUID
+        WHERE q.UID = #{uid} AND q.Status != 0
+        ORDER BY q.CreateTime DESC, q.QID DESC
+    </select>
+
+    <select id="selectPage" resultType="com.classroom.entity.Question">
+        SELECT <include refid="questionJoinColumns"/>
+        FROM questions q
+        INNER JOIN users u ON q.UID = u.UID
+        INNER JOIN chapters ch ON q.CHID = ch.CHID
+        INNER JOIN courses c ON ch.CUID = c.CUID
+        <where>
+            q.Status != 0
+            <if test="status != null">AND q.Status = #{status}</if>
+            <if test="chid != null">AND q.CHID = #{chid}</if>
+            <if test="keyword != null and keyword != ''">
+                AND q.Question LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+        </where>
+        ORDER BY q.CreateTime DESC, q.QID DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*)
+        FROM questions q
+        <where>
+            q.Status != 0
+            <if test="status != null">AND q.Status = #{status}</if>
+            <if test="chid != null">AND q.CHID = #{chid}</if>
+            <if test="keyword != null and keyword != ''">
+                AND q.Question LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+        </where>
+    </select>
+
+    <insert id="insert" parameterType="com.classroom.entity.Question"
+            useGeneratedKeys="true" keyProperty="qid">
+        INSERT INTO questions (UID, CHID, Question, Answer)
+        VALUES (#{uid}, #{chid}, #{question}, #{answer})
+    </insert>
+
+    <update id="reply">
+        UPDATE questions
+        SET Answer = #{answer}, Status = 2
+        WHERE QID = #{qid}
+    </update>
+
+    <update id="update" parameterType="com.classroom.entity.Question">
+        UPDATE questions
+        <set>
+            <if test="question != null">Question = #{question},</if>
+            <if test="answer != null">Answer = #{answer},</if>
+            <if test="status != null">Status = #{status},</if>
+            <if test="remark != null">Remark = #{remark},</if>
+        </set>
+        WHERE QID = #{qid}
+    </update>
+
+    <update id="deleteByQid">
+        UPDATE questions SET Status = 0 WHERE QID = #{qid}
+    </update>
+
+    <select id="selectDeleted" resultType="com.classroom.entity.Question">
+        SELECT <include refid="questionJoinColumns"/>
+        FROM questions q
+        INNER JOIN users u ON q.UID = u.UID
+        INNER JOIN chapters ch ON q.CHID = ch.CHID
+        INNER JOIN courses c ON ch.CUID = c.CUID
+        WHERE q.Status = 0
+        ORDER BY q.CreateTime DESC, q.QID DESC
+    </select>
+
+    <update id="restore">
+        UPDATE questions SET Status = 1 WHERE QID = #{qid}
+    </update>
+
+    <delete id="deleteByQidPhysical">
+        DELETE FROM questions WHERE QID = #{qid}
+    </delete>
+
+    <delete id="deleteByChids">
+        DELETE FROM questions
+        WHERE CHID IN
+        <foreach collection="chids" item="chid" open="(" separator="," close=")">
+            #{chid}
+        </foreach>
+    </delete>
+</mapper>

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.classroom.mapper.UserCollectionMapper">
+
+    <sql id="collectionColumns">
+        COID, UID, CUID, Status, CreateTime, Remark
+    </sql>
+
+    <select id="selectByCoid" resultType="com.classroom.entity.UserCollection">
+        SELECT <include refid="collectionColumns"/>
+        FROM usercollections
+        WHERE COID = #{coid}
+    </select>
+
+    <select id="selectByUidAndCuid" resultType="com.classroom.entity.UserCollection">
+        SELECT <include refid="collectionColumns"/>
+        FROM usercollections
+        WHERE UID = #{uid} AND CUID = #{cuid}
+        LIMIT 1
+    </select>
+
+    <select id="selectByUid" resultType="com.classroom.entity.UserCollection">
+        SELECT <include refid="collectionColumns"/>
+        FROM usercollections
+        WHERE UID = #{uid} AND Status = 1
+        ORDER BY CreateTime DESC
+    </select>
+
+    <select id="selectMineByUid" resultType="com.classroom.entity.UserCollection">
+        SELECT uc.COID, uc.UID, uc.CUID, uc.Status, uc.CreateTime, uc.Remark,
+               c.CourseName AS courseName,
+               c.CourseImage AS courseImage,
+               c.Teacher AS teacher,
+               c.LearnTime AS learnTime
+        FROM usercollections uc
+        INNER JOIN courses c ON uc.CUID = c.CUID AND c.Status = 1
+        WHERE uc.UID = #{uid} AND uc.Status = 1
+        ORDER BY uc.CreateTime DESC, uc.COID DESC
+    </select>
+
+    <insert id="insert" parameterType="com.classroom.entity.UserCollection"
+            useGeneratedKeys="true" keyProperty="coid">
+        INSERT INTO usercollections (UID, CUID, Status)
+        VALUES (#{uid}, #{cuid}, #{status})
+    </insert>
+
+    <update id="update" parameterType="com.classroom.entity.UserCollection">
+        UPDATE usercollections
+        <set>
+            <if test="status != null">Status = #{status},</if>
+            <if test="remark != null">Remark = #{remark},</if>
+        </set>
+        WHERE COID = #{coid}
+    </update>
+
+    <delete id="deleteByCoid">
+        DELETE FROM usercollections WHERE COID = #{coid}
+    </delete>
+
+    <delete id="deleteByCuid">
+        DELETE FROM usercollections WHERE CUID = #{cuid}
+    </delete>
+</mapper>

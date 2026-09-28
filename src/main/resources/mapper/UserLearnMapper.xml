@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.classroom.mapper.UserLearnMapper">
+
+    <sql id="learnColumns">
+        UCID, UID, CHID, StartTime, EndTime, Status, Remark
+    </sql>
+
+    <select id="selectByUcid" resultType="com.classroom.entity.UserLearn">
+        SELECT <include refid="learnColumns"/>
+        FROM userlearns
+        WHERE UCID = #{ucid}
+    </select>
+
+    <select id="selectByUidAndChid" resultType="com.classroom.entity.UserLearn">
+        SELECT <include refid="learnColumns"/>
+        FROM userlearns
+        WHERE UID = #{uid} AND CHID = #{chid}
+        ORDER BY UCID DESC
+        LIMIT 1
+    </select>
+
+    <select id="selectByUid" resultType="com.classroom.entity.UserLearn">
+        SELECT <include refid="learnColumns"/>
+        FROM userlearns
+        WHERE UID = #{uid} AND Status = 1
+        ORDER BY UCID DESC
+    </select>
+
+    <select id="selectProgressByUid" resultType="com.classroom.vo.CourseProgressVO">
+        SELECT c.CUID AS cuid,
+               c.CourseName AS courseName,
+               c.Teacher AS teacher,
+               (SELECT COUNT(*) FROM chapters ch2 WHERE ch2.CUID = c.CUID AND ch2.Status = 1) AS totalChapters,
+               COUNT(DISTINCT ul.CHID) AS learnedChapters,
+               (SELECT ch3.CHID FROM userlearns ul3
+                 INNER JOIN chapters ch3 ON ul3.CHID = ch3.CHID AND ch3.Status = 1
+                WHERE ul3.UID = #{uid} AND ul3.Status = 1 AND ch3.CUID = c.CUID
+                ORDER BY ul3.StartTime DESC, ul3.UCID DESC LIMIT 1) AS lastChapterId,
+               (SELECT ch3.ChapterName FROM userlearns ul3
+                 INNER JOIN chapters ch3 ON ul3.CHID = ch3.CHID AND ch3.Status = 1
+                WHERE ul3.UID = #{uid} AND ul3.Status = 1 AND ch3.CUID = c.CUID
+                ORDER BY ul3.StartTime DESC, ul3.UCID DESC LIMIT 1) AS lastChapterName,
+               (SELECT MAX(ul3.StartTime) FROM userlearns ul3
+                 INNER JOIN chapters ch3 ON ul3.CHID = ch3.CHID AND ch3.Status = 1
+                WHERE ul3.UID = #{uid} AND ul3.Status = 1 AND ch3.CUID = c.CUID) AS finishTime
+        FROM userlearns ul
+        INNER JOIN chapters ch ON ul.CHID = ch.CHID AND ch.Status = 1
+        INNER JOIN courses c ON ch.CUID = c.CUID AND c.Status = 1
+        WHERE ul.UID = #{uid} AND ul.Status = 1
+        GROUP BY c.CUID, c.CourseName, c.Teacher
+        ORDER BY finishTime DESC
+    </select>
+
+    <!-- 后台学习记录分页（联查学员/课程/章节名） -->
+    <select id="selectAdminPage" resultType="com.classroom.entity.UserLearn">
+        SELECT ul.UCID, ul.UID, ul.CHID, ul.StartTime, ul.EndTime, ul.Status, ul.Remark,
+               u.UserName AS userName,
+               c.CourseName AS courseName,
+               ch.ChapterName AS chapterName
+        FROM userlearns ul
+        INNER JOIN users u ON ul.UID = u.UID
+        INNER JOIN chapters ch ON ul.CHID = ch.CHID
+        INNER JOIN courses c ON ch.CUID = c.CUID
+        WHERE ul.Status = 1
+        ORDER BY ul.UCID DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="countAdmin" resultType="long">
+        SELECT COUNT(*) FROM userlearns WHERE Status = 1
+    </select>
+
+    <insert id="insert" parameterType="com.classroom.entity.UserLearn"
+            useGeneratedKeys="true" keyProperty="ucid">
+        INSERT INTO userlearns (UID, CHID, Status)
+        VALUES (#{uid}, #{chid}, #{status})
+    </insert>
+
+    <update id="update" parameterType="com.classroom.entity.UserLearn">
+        UPDATE userlearns
+        <set>
+            <if test="startTime != null">StartTime = #{startTime},</if>
+            <if test="endTime != null">EndTime = #{endTime},</if>
+            <if test="status != null">Status = #{status},</if>
+            <if test="remark != null">Remark = #{remark},</if>
+        </set>
+        WHERE UCID = #{ucid}
+    </update>
+
+    <delete id="deleteByUcid">
+        DELETE FROM userlearns WHERE UCID = #{ucid}
+    </delete>
+
+    <delete id="deleteByChids">
+        DELETE FROM userlearns
+        WHERE CHID IN
+        <foreach collection="chids" item="chid" open="(" separator="," close=")">
+            #{chid}
+        </foreach>
+    </delete>
+</mapper>

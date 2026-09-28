@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.classroom.mapper.ChapterMapper">
+
+    <sql id="chapterColumns">
+        CHID, CUID, ChapterName, Summary, VideoUrl, Orders, Status, CreateTime, Remark
+    </sql>
+
+    <select id="selectByChid" resultType="com.classroom.entity.Chapter">
+        SELECT <include refid="chapterColumns"/>
+        FROM chapters
+        WHERE CHID = #{chid}
+    </select>
+
+    <select id="selectByCourseId" resultType="com.classroom.entity.Chapter">
+        SELECT <include refid="chapterColumns"/>,
+               (SELECT COUNT(*) FROM chapter_files f WHERE f.CHID = chapters.CHID) AS fileCount,
+               (SELECT COUNT(*) FROM chapter_quizzes q WHERE q.CHID = chapters.CHID) AS quizCount
+        FROM chapters
+        WHERE CUID = #{cuid} AND Status = 1
+        ORDER BY Orders, CHID
+    </select>
+
+    <select id="selectByCourseIdAll" resultType="com.classroom.entity.Chapter">
+        SELECT <include refid="chapterColumns"/>
+        FROM chapters
+        WHERE CUID = #{cuid}
+        ORDER BY Orders, CHID
+    </select>
+
+    <insert id="insert" parameterType="com.classroom.entity.Chapter"
+            useGeneratedKeys="true" keyProperty="chid">
+        INSERT INTO chapters (CUID, ChapterName, Summary, VideoUrl, Orders, Status, Remark)
+        VALUES (#{cuid}, #{chapterName}, #{summary}, #{videoUrl}, #{orders}, #{status}, #{remark})
+    </insert>
+
+    <update id="update" parameterType="com.classroom.entity.Chapter">
+        UPDATE chapters
+        <set>
+            <if test="cuid != null">CUID = #{cuid},</if>
+            <if test="chapterName != null">ChapterName = #{chapterName},</if>
+            <if test="summary != null">Summary = #{summary},</if>
+            <if test="videoUrl != null">VideoUrl = #{videoUrl},</if>
+            <if test="orders != null">Orders = #{orders},</if>
+            <if test="status != null">Status = #{status},</if>
+            <if test="remark != null">Remark = #{remark},</if>
+        </set>
+        WHERE CHID = #{chid}
+    </update>
+
+    <update id="deleteByChid">
+        UPDATE chapters SET Status = 0 WHERE CHID = #{chid}
+    </update>
+
+    <update id="deleteByCourseId">
+        UPDATE chapters SET Status = 0 WHERE CUID = #{cuid}
+    </update>
+
+    <select id="selectDeleted" resultType="com.classroom.entity.Chapter">
+        SELECT ch.CHID, ch.CUID, ch.ChapterName, ch.Summary, ch.VideoUrl, ch.Orders, ch.Status, ch.CreateTime, ch.Remark,
+               c.CourseName AS courseName
+        FROM chapters ch
+        INNER JOIN courses c ON ch.CUID = c.CUID
+        WHERE ch.Status = 0
+        ORDER BY ch.CreateTime DESC, ch.CHID DESC
+    </select>
+
+    <update id="restore">
+        UPDATE chapters SET Status = 1 WHERE CHID = #{chid}
+    </update>
+
+    <delete id="deleteByChidPhysical">
+        DELETE FROM chapters WHERE CHID = #{chid}
+    </delete>
+
+    <select id="selectChidsByCourse" resultType="java.lang.Integer">
+        SELECT CHID FROM chapters WHERE CUID = #{cuid}
+    </select>
+
+    <delete id="deleteByCourseIdPhysical">
+        DELETE FROM chapters WHERE CUID = #{cuid}
+    </delete>
+</mapper>
